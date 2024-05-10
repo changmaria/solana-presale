@@ -109,6 +109,8 @@ const transaction = async () => {
     createTokenSaleProgramAccountIx,
     initTokenSaleProgramIx
   );
+  tx.feePayer = sellerKeypair.publicKey;
+  tx.partialSign(sellerKeypair);
 
   await sendAndConfirmTransaction(connection, tx, [sellerKeypair, tempTokenAccountKeypair, tokenSaleProgramAccountKeypair]);
   //phase1 end
