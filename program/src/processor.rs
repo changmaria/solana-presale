@@ -23,9 +23,7 @@ impl Processor {
         let instruction = TokenSaleInstruction::unpack(instruction_data)?;
 
         match instruction {
-            TokenSaleInstruction::InitTokenSale { 
-                min_token_amount,
-                max_token_amount,
+            TokenSaleInstruction::InitTokenSale {
                 per_token_price,
                 max_token_price,
                 increase_token_price,
@@ -35,8 +33,6 @@ impl Processor {
                 Self::init_token_sale_program(
                     accounts,
                     token_program_id,
-                    min_token_amount,
-                    max_token_amount,
                     per_token_price,
                     max_token_price,
                     increase_token_price,
@@ -58,8 +54,6 @@ impl Processor {
     fn init_token_sale_program(
         account_info_list: &[AccountInfo],
         token_sale_program_id: &Pubkey,
-        min_token_amount: u64,
-        max_token_amount: u64,
         per_token_price: u64,
         max_token_price: u64,
         increase_token_price: u64,
@@ -100,8 +94,6 @@ impl Processor {
             true,
             *seller_account_info.key,
             *temp_token_account_info.key,
-            min_token_amount,
-            max_token_amount,
             per_token_price,
             max_token_price,
             increase_token_price,
@@ -160,12 +152,6 @@ impl Processor {
 
         if *temp_token_account_info.key != token_sale_program_account_data.temp_token_account_pubkey
         {
-            return Err(ProgramError::InvalidAccountData);
-        }
-
-        if number_of_tokens <= token_sale_program_account_data.min_token_amount {
-            return Err(ProgramError::InvalidAccountData);
-        } else if (number_of_tokens + token_sale_program_account_data.purchased_token_amount) > token_sale_program_account_data.max_token_amount {
             return Err(ProgramError::InvalidAccountData);
         }
 

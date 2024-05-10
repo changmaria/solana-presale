@@ -6,10 +6,6 @@ use solana_program::program_error::ProgramError;
 pub enum CustomError {
     #[error("invalid instruction")]
     InvalidInstruction,
-    #[error("Min buy limit not reached")]
-    MinLimitNotReached,
-    #[error("Max buy limit reached in this presale")]
-    MaxLimitReached,
 }
 
 impl From<CustomError> for ProgramError {

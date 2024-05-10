@@ -10,8 +10,6 @@ pub struct TokenSaleProgramData {
     pub is_initialized: bool,
     pub seller_pubkey: Pubkey,
     pub temp_token_account_pubkey: Pubkey,
-    pub min_token_amount: u64,
-    pub max_token_amount: u64,
     pub per_token_price: u64,
     pub max_token_price: u64,
     pub increase_token_price: u64,
@@ -26,8 +24,6 @@ impl TokenSaleProgramData {
         is_initialized: bool,
         seller_pubkey: Pubkey,
         temp_token_account_pubkey: Pubkey,
-        min_token_amount: u64,
-        max_token_amount: u64,
         per_token_price: u64,
         max_token_price: u64,
         increase_token_price: u64,
@@ -38,8 +34,6 @@ impl TokenSaleProgramData {
         self.is_initialized = is_initialized;
         self.seller_pubkey = seller_pubkey;
         self.temp_token_account_pubkey = temp_token_account_pubkey;
-        self.min_token_amount = min_token_amount;
-        self.max_token_amount = max_token_amount;
         self.per_token_price = per_token_price;
         self.max_token_price = max_token_price;
         self.increase_token_price = increase_token_price;
@@ -74,22 +68,20 @@ impl IsInitialized for TokenSaleProgramData {
 }
 
 impl Pack for TokenSaleProgramData {
-    const LEN: usize = 129;
+    const LEN: usize = 113;
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
         let src = array_ref![src, 0, TokenSaleProgramData::LEN];
         let (
             is_initialized,
             seller_pubkey,
             temp_token_account_pubkey,
-            min_token_amount,
-            max_token_amount,
             per_token_price,
             max_token_price,
             increase_token_price,
             purchased_token_amount,
             phase_start_time,
             phase_delay_time
-        ) = array_refs![src, 1, 32, 32, 8, 8, 8, 8, 8, 8, 8, 8];
+        ) = array_refs![src, 1, 32, 32, 8, 8, 8, 8, 8, 8];
 
         let is_initialized = match is_initialized {
             [0] => false,
@@ -101,8 +93,6 @@ impl Pack for TokenSaleProgramData {
             is_initialized,
             seller_pubkey: Pubkey::new_from_array(*seller_pubkey),
             temp_token_account_pubkey: Pubkey::new_from_array(*temp_token_account_pubkey),
-            min_token_amount: u64::from_le_bytes(*min_token_amount),
-            max_token_amount: u64::from_le_bytes(*max_token_amount),
             per_token_price: u64::from_le_bytes(*per_token_price),
             max_token_price: u64::from_le_bytes(*max_token_price),
             increase_token_price: u64::from_le_bytes(*increase_token_price),
@@ -118,22 +108,18 @@ impl Pack for TokenSaleProgramData {
             is_initialized_dst,
             seller_pubkey_dst,
             temp_token_account_pubkey_dst,
-            min_token_amount_dst,
-            max_token_amount_dst,
             per_token_price_dst,
             max_token_price_dst,
             increase_token_price_dst,
             purchased_token_amount_dst,
             phase_start_time_dst,
             phase_delay_time_dst
-        ) = mut_array_refs![dst, 1, 32, 32, 8, 8, 8, 8, 8, 8, 8, 8];
+        ) = mut_array_refs![dst, 1, 32, 32, 8, 8, 8, 8, 8, 8];
 
         let TokenSaleProgramData {
             is_initialized,
             seller_pubkey,
             temp_token_account_pubkey,
-            min_token_amount,
-            max_token_amount,
             per_token_price,
             max_token_price,
             increase_token_price,
@@ -145,8 +131,6 @@ impl Pack for TokenSaleProgramData {
         is_initialized_dst[0] = *is_initialized as u8;
         seller_pubkey_dst.copy_from_slice(seller_pubkey.as_ref());
         temp_token_account_pubkey_dst.copy_from_slice(temp_token_account_pubkey.as_ref());
-        *min_token_amount_dst = min_token_amount.to_le_bytes();
-        *max_token_amount_dst = max_token_amount.to_le_bytes();
         *per_token_price_dst = per_token_price.to_le_bytes();
         *max_token_price_dst = max_token_price.to_le_bytes();
         *increase_token_price_dst = increase_token_price.to_le_bytes();

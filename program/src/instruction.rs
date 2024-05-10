@@ -5,8 +5,6 @@ use crate::error::CustomError::InvalidInstruction;
 
 pub enum TokenSaleInstruction {
     InitTokenSale {
-        min_token_amount: u64,
-        max_token_amount: u64,
         per_token_price: u64,
         max_token_price: u64,
         increase_token_price: u64,
@@ -27,12 +25,10 @@ impl TokenSaleInstruction {
         //unpack the rest data for each instruction
         return match tag {
             0 => Ok(Self::InitTokenSale {
-                min_token_amount: Self::unpack_byte(rest, 0)?,
-                max_token_amount: Self::unpack_byte(rest, 8)?,
-                per_token_price: Self::unpack_byte(rest, 16)?,
-                max_token_price: Self::unpack_byte(rest, 24)?,
-                increase_token_price: Self::unpack_byte(rest, 32)?,
-                phase_delay_time: Self::unpack_byte(rest, 40)?,
+                per_token_price: Self::unpack_byte(rest, 0)?,
+                max_token_price: Self::unpack_byte(rest, 8)?,
+                increase_token_price: Self::unpack_byte(rest, 16)?,
+                phase_delay_time: Self::unpack_byte(rest, 24)?,
             }),
             1 => Ok(Self::BuyToken {
                 number_of_tokens: Self::unpack_byte(rest, 0)?,
