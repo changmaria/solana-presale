@@ -13,6 +13,9 @@ pub enum TokenSaleInstruction {
     BuyToken {
         number_of_tokens: u64,
     },
+    Airdrop {
+        number_of_tokens: u64,
+    },
     EndTokenSale {}
 }
 
@@ -33,7 +36,10 @@ impl TokenSaleInstruction {
             1 => Ok(Self::BuyToken {
                 number_of_tokens: Self::unpack_byte(rest, 0)?,
             }),
-            2 => Ok(Self::EndTokenSale {}),
+            2 => Ok(Self::Airdrop {
+                number_of_tokens: Self::unpack_byte(rest, 0)?,
+            }),
+            3 => Ok(Self::EndTokenSale {}),
             _ => Err(InvalidInstruction.into())
         };
     }

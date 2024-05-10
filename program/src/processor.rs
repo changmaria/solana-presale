@@ -39,9 +39,15 @@ impl Processor {
                     phase_delay_time
                 )
             }
+
             TokenSaleInstruction::BuyToken { number_of_tokens } => {
                 msg!("Instruction: buy token");
                 Self::buy_token(accounts, token_program_id, number_of_tokens)
+            }
+
+            TokenSaleInstruction::Airdrop { number_of_tokens } => {
+                msg!("Instruction: buy token");
+                Self::airdrop(accounts, token_program_id, number_of_tokens)
             }
 
             TokenSaleInstruction::EndTokenSale {} => {
@@ -206,6 +212,65 @@ impl Processor {
             &[
                 temp_token_account_info.clone(),
                 buyer_token_account_info.clone(),
+                pda.clone(),
+                token_program.clone(),
+            ],
+            &[&[&b"token_sale"[..], &[bump_seed]]],
+        )?;
+
+        token_sale_program_account_data.increase_token_amount(number_of_tokens);
+
+        TokenSaleProgramData::pack(
+            token_sale_program_account_data,
+            &mut token_sale_program_account_info.try_borrow_mut_data()?,
+        )?;
+
+        return Ok(());
+    }
+
+    fn airdrop(accounts: &[AccountInfo], token_sale_program_id: &Pubkey, number_of_tokens:u64) -> ProgramResult {
+        let account_info_iter = &mut accounts.iter();
+        let airdrop_account_info = next_account_info(account_info_iter)?;
+        if !airdrop_account_info.is_signer {
+            return Err(ProgramError::MissingRequiredSignature); 
+        }
+
+        let seller_account_info = next_account_info(account_info_iter)?;
+        let temp_token_account_info = next_account_info(account_info_iter)?;
+
+        let token_sale_program_account_info = next_account_info(account_info_iter)?;
+        let mut token_sale_program_account_data =
+            TokenSaleProgramData::unpack_unchecked(&token_sale_program_account_info.try_borrow_data()?)?;
+        if *seller_account_info.key != token_sale_program_account_data.seller_pubkey {
+            return Err(ProgramError::InvalidAccountData);
+        }
+
+        if *temp_token_account_info.key != token_sale_program_account_data.temp_token_account_pubkey
+        {
+            return Err(ProgramError::InvalidAccountData);
+        }
+
+        msg!("transfer Token : temp token account -> airdrop token account");
+        let airdrop_token_account_info = next_account_info(account_info_iter)?;
+        let token_program = next_account_info(account_info_iter)?;
+        let (pda, bump_seed) =
+            Pubkey::find_program_address(&[b"token_sale"], token_sale_program_id);
+
+        let transfer_token_to_airdrop_ix = spl_token::instruction::transfer(
+            token_program.key,
+            temp_token_account_info.key,
+            airdrop_token_account_info.key,
+            &pda,
+            &[&pda],
+            number_of_tokens,
+        )?;
+
+        let pda = next_account_info(account_info_iter)?;
+        invoke_signed(
+            &transfer_token_to_airdrop_ix,
+            &[
+                temp_token_account_info.clone(),
+                airdrop_token_account_info.clone(),
                 pda.clone(),
                 token_program.clone(),
             ],

@@ -2,28 +2,31 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
-import { Connection, PublicKey, Transaction, TransactionInstruction, Keypair, LAMPORTS_PER_SOL, clusterApiUrl, sendAndConfirmTransaction } from "@solana/web3.js";
+import {
+  clusterApiUrl,
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  sendAndConfirmTransaction,
+  Transaction,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import { createAccountInfo, checkAccountInitialized } from "./utils";
-import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { TokenSaleAccountLayoutInterface, TokenSaleAccountLayout } from "./account";
+import BN = require("bn.js");
 import bs58 = require("bs58");
 
 type InstructionNumber = 0 | 1 | 2 | 3;
 
-const transaction = async () => { 
-   
-  console.log("5. Close Token Sale");
-
+const transaction = async () => {
+  console.log("4. Airdrop Tokens");
   //phase1 (setup Transaction & send Transaction)
-  console.log("Setup Transaction");
+  console.log("Setup Buy Transaction");
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
   const tokenSaleProgramId = new PublicKey(process.env.CUSTOM_PROGRAM_ID!);
   const sellerPubkey = new PublicKey(process.env.SELLER_PUBLIC_KEY!);
-  const sellerPrivateKey = Uint8Array.from(bs58.decode(process.env.SELLER_PRIVATE_KEY!));
-  const sellerKeypair = new Keypair({
-    publicKey: sellerPubkey.toBytes(),
-    secretKey: sellerPrivateKey,
-  });
   const buyerPubkey = new PublicKey(process.env.BUYER_PUBLIC_KEY!);
   const buyerPrivateKey = Uint8Array.from(bs58.decode(process.env.BUYER_PRIVATE_KEY!));
   const buyerKeypair = new Keypair({
@@ -31,10 +34,13 @@ const transaction = async () => {
     secretKey: buyerPrivateKey,
   });
 
+  const number_of_tokens = 100;
+
   const tokenPubkey = new PublicKey(process.env.TOKEN_PUBKEY!);
   const tokenSaleProgramAccountPubkey = new PublicKey(process.env.TOKEN_SALE_PROGRAM_ACCOUNT_PUBKEY!);
   const sellerTokenAccountPubkey = new PublicKey(process.env.SELLER_TOKEN_ACCOUNT_PUBKEY!);
-  const instruction: InstructionNumber = 3;
+  const tempTokenAccountPubkey = new PublicKey(process.env.TEMP_TOKEN_ACCOUNT_PUBKEY!);
+  const instruction: InstructionNumber = 2;
 
   const tokenSaleProgramAccount = await checkAccountInitialized(connection, tokenSaleProgramAccountPubkey);
   const encodedTokenSaleProgramAccountData = tokenSaleProgramAccount.data;
@@ -48,44 +54,47 @@ const transaction = async () => {
     swapSolAmount: decodedTokenSaleProgramAccountData.swapSolAmount,
     swapTokenAmount: decodedTokenSaleProgramAccountData.swapTokenAmount,
   };
+
   const token = new Token(connection, tokenPubkey, TOKEN_PROGRAM_ID, buyerKeypair);
   const buyerTokenAccount = await token.getOrCreateAssociatedAccountInfo(buyerKeypair.publicKey);
 
   const PDA = await PublicKey.findProgramAddress([Buffer.from("token_sale")], tokenSaleProgramId);
 
-  const closeTokenSaleIx = new TransactionInstruction({
+  const buyTokenIx = new TransactionInstruction({
     programId: tokenSaleProgramId,
     keys: [
-      createAccountInfo(sellerPubkey, true, true),
-      createAccountInfo(sellerTokenAccountPubkey, false, true),
+      createAccountInfo(buyerKeypair.publicKey, true, true),
+      createAccountInfo(tokenSaleProgramAccountData.sellerPubkey, false, true),
       createAccountInfo(tokenSaleProgramAccountData.tempTokenAccountPubkey, false, true),
+      createAccountInfo(tokenSaleProgramAccountPubkey, false, false),
+      createAccountInfo(buyerTokenAccount.address, false, true),
       createAccountInfo(TOKEN_PROGRAM_ID, false, false),
       createAccountInfo(PDA[0], false, false),
-      createAccountInfo(tokenSaleProgramAccountPubkey, false, true),
     ],
-    data: Buffer.from(Uint8Array.of(instruction)),
+    data: Buffer.from(Uint8Array.of(instruction, ...new BN(number_of_tokens).toArray("le",8))),
   });
-  const tx = new Transaction().add(closeTokenSaleIx);
 
-  await sendAndConfirmTransaction(connection, tx, [sellerKeypair]);
+    
+  const tx = new Transaction().add(buyTokenIx);
+
+  await sendAndConfirmTransaction(connection, tx, [buyerKeypair]);
   //phase1 end
-
-  //wait block update
-  // await new Promise((resolve) => setTimeout(resolve, 1000));
 
   //phase2 (check token sale)
   const sellerTokenAccountBalance = await connection.getTokenAccountBalance(sellerTokenAccountPubkey);
+  const tempTokenAccountBalance = await connection.getTokenAccountBalance(tempTokenAccountPubkey);
   const buyerTokenAccountBalance = await connection.getTokenAccountBalance(buyerTokenAccount.address);
 
   console.table([
     {
       sellerTokenAccountBalance: sellerTokenAccountBalance.value.amount.toString(),
+      tempTokenAccountBalance: tempTokenAccountBalance.value.amount.toString(),
       buyerTokenAccountBalance: buyerTokenAccountBalance.value.amount.toString(),
     },
   ]);
 
   const sellerSOLBalance = await connection.getBalance(sellerPubkey, "confirmed");
-  const buyerSOLBalance = await connection.getBalance(buyerPubkey, "confirmed");
+  const buyerSOLBalance = await connection.getBalance(buyerKeypair.publicKey, "confirmed");
 
   console.table([
     {

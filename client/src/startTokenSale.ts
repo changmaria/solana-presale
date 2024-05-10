@@ -25,7 +25,7 @@ import {
 import { AccountLayout, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import bs58 = require("bs58");
 
-type InstructionNumber = 0 | 1 | 2;
+type InstructionNumber = 0 | 1 | 2 | 3;
 
 const transaction = async () => {  
   console.log("2. Start Token Sale");
@@ -48,7 +48,7 @@ const transaction = async () => {
   const perTokenPrice = 0.0075*LAMPORTS_PER_SOL;
   const maxTokenPrice = 0.01*LAMPORTS_PER_SOL;
   const increaseTokenPrice = 0.0005*LAMPORTS_PER_SOL;
-  const phaseDelayTime = 3600 * 10;
+  const phaseDelayTime = 60 * 30;
 
   const tempTokenAccountKeypair = new Keypair();
   const createTempTokenAccountIx = SystemProgram.createAccount({
@@ -84,6 +84,8 @@ const transaction = async () => {
     programId: tokenSaleProgramId,
   });
 
+  console.log("tokenSaleProgramId", tokenSaleProgramId);
+
   const initTokenSaleProgramIx = new TransactionInstruction({
     programId: tokenSaleProgramId,
     keys: [
@@ -110,9 +112,6 @@ const transaction = async () => {
 
   await sendAndConfirmTransaction(connection, tx, [sellerKeypair, tempTokenAccountKeypair, tokenSaleProgramAccountKeypair]);
   //phase1 end
-
-  //wait block update
-  // await new Promise((resolve) => setTimeout(resolve, 2000));
 
   //phase2 (check Transaction result is valid)
   const tokenSaleProgramAccount = await checkAccountInitialized(connection, tokenSaleProgramAccountKeypair.publicKey);

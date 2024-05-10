@@ -19,7 +19,7 @@ import { TokenSaleAccountLayoutInterface, TokenSaleAccountLayout } from "./accou
 import BN = require("bn.js");
 import bs58 = require("bs58");
 
-type InstructionNumber = 0 | 1 | 2;
+type InstructionNumber = 0 | 1 | 2 | 3;
 
 const transaction = async () => {
   console.log("3. Buy Tokens");
@@ -81,9 +81,6 @@ const transaction = async () => {
 
   await sendAndConfirmTransaction(connection, tx, [buyerKeypair]);
   //phase1 end
-
-  //wait block update
-  // await new Promise((resolve) => setTimeout(resolve, 1000));
 
   //phase2 (check token sale)
   const sellerTokenAccountBalance = await connection.getTokenAccountBalance(sellerTokenAccountPubkey);

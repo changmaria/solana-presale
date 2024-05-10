@@ -1,6 +1,4 @@
-# Solana Token Sale Program
-
-Swap SPL tokens for SOL at a fixed price
+# Solana Presale Program
 
 ## Development
 
@@ -26,22 +24,7 @@ $ cargo build-bpf
 ### Deploy
 
 ```
-$ solana program deploy target/deploy/spl_tokensale_solana.so
-```
-
-### Set Environment Variables
-Before running RPC Client, Change .example-env to .env. And refer to the below and fill NEEDED section.
-
-```
-CUSTOM_PROGRAM_ID=NEEDED
-SELLER_PUBLIC_KEY=NEEDED
-SELLER_PRIVATE_KEY=NEEDED
-BUYER_PUBLIC_KEY=NEEDED
-BUYER_PRIVATE_KEY=NEEDED
-TOKEN_PUBKEY=Dont'mind this
-SELLER_TOKEN_ACCOUNT_PUBKEY=Dont'mind this
-TEMP_TOKEN_ACCOUNT_PUBKEY=Dont'mind this
-TOKEN_SALE_PROGRAM_ACCOUNT_PUBKEY=Dont'mind this
+$ solana program deploy target/deploy/solana_presale.so
 ```
 
 ### Test
