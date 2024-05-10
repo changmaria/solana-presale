@@ -19,7 +19,7 @@ $ cargo build
 
 To build a specific program, such as SPL Token, for the Solana BPF target:
 ```
-$ cd token/program
+$ cd program
 $ cargo build-bpf
 ```
 
@@ -51,9 +51,3 @@ $ cd client
 $ npm install
 $ npm run all
 ```
-
-# Disclaimer
-
-Use this contract at your own risk. This program was not audited.
-
-Reference https://github.com/myungjunChae/solana_token_sale
