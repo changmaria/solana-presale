@@ -6,7 +6,7 @@
   "scripts": {
     "compile": "tsc -p ./tsconfig.json",
     "setup-validator": "solana-test-validator -r --bpf-program 79qNzt6mJ9iifKBB4WK5MaCJDJwnU6DWCvX7E8ScD6M9",
-    "setup" : "npm run compile && node build/setup.js",
+    "setup": "npm run compile && node build/setup.js",
     "start": "npm run compile && node build/setup.js && node build/startTokenSale.js",
     "buy": "npm run compile && node build/buyToken.js",
     "close": "npm run compile && node build/closeTokenSale.js",
@@ -14,6 +14,7 @@
   },
   "author": "",
   "devDependencies": {
+    "@types/bn.js": "^5.1.5",
     "@types/bs58": "^4.0.1",
     "@typescript-eslint/eslint-plugin": "^4.31.2",
     "@typescript-eslint/parser": "^4.31.2",

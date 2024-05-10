@@ -5,6 +5,7 @@ dotenv.config();
 import { Connection, Keypair, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl } from "@solana/web3.js";
 import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { updateEnv } from "./utils";
+import bs58 = require("bs58");
 
 const setup = async () => {  
   
@@ -12,7 +13,7 @@ const setup = async () => {
 
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
   const sellerPubkey = new PublicKey(process.env.SELLER_PUBLIC_KEY!);
-  const sellerPrivateKey = Uint8Array.from(JSON.parse(process.env.SELLER_PRIVATE_KEY!));
+  const sellerPrivateKey = Uint8Array.from(bs58.decode(process.env.SELLER_PRIVATE_KEY!));
   const sellerKeypair = new Keypair({
     publicKey: sellerPubkey.toBytes(),
     secretKey: sellerPrivateKey,
@@ -20,7 +21,7 @@ const setup = async () => {
   
   const buyerPubkey = new PublicKey(process.env.BUYER_PUBLIC_KEY!);
 
-  console.log("Create Token Mint Account...\n");
+  console.log("Create Token Mint Account...\n", sellerKeypair.publicKey, sellerKeypair.secretKey);
   const token = await Token.createMint(connection, sellerKeypair, sellerKeypair.publicKey, null, 0, TOKEN_PROGRAM_ID);
 
   console.log("Create Seller Token Account...\n");

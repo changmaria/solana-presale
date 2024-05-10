@@ -12,8 +12,9 @@ import {
   SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
+  sendAndConfirmTransaction
 } from "@solana/web3.js";
-import BN = require("bn.js");
+import * as BN from "bn.js";
 import { checkAccountInitialized, checkAccountDataIsValid, createAccountInfo, updateEnv } from "./utils";
 
 import {
@@ -22,6 +23,7 @@ import {
   ExpectedTokenSaleAccountLayoutInterface,
 } from "./account";
 import { AccountLayout, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import bs58 = require("bs58");
 
 type InstructionNumber = 0 | 1 | 2;
 
@@ -30,10 +32,10 @@ const transaction = async () => {
 
   //phase1 (setup Transaction & send Transaction)
   console.log("Setup Transaction");
-  const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+  const connection = new Connection(clusterApiUrl("devnet"));
   const tokenSaleProgramId = new PublicKey(process.env.CUSTOM_PROGRAM_ID!);
   const sellerPubkey = new PublicKey(process.env.SELLER_PUBLIC_KEY!);
-  const sellerPrivateKey = Uint8Array.from(JSON.parse(process.env.SELLER_PRIVATE_KEY!));
+  const sellerPrivateKey = Uint8Array.from(bs58.decode(process.env.SELLER_PRIVATE_KEY!));
   const sellerKeypair = new Keypair({
     publicKey: sellerPubkey.toBytes(),
     secretKey: sellerPrivateKey,
@@ -43,7 +45,10 @@ const transaction = async () => {
   console.log("sellerTokenAccountPubkey: ", sellerTokenAccountPubkey.toBase58());
   const instruction: InstructionNumber = 0;
   const amountOfTokenWantToSale = 1000;
-  const perTokenPrice = 0.1*LAMPORTS_PER_SOL;
+  const perTokenPrice = 0.0075*LAMPORTS_PER_SOL;
+  const maxTokenPrice = 0.01*LAMPORTS_PER_SOL;
+  const increaseTokenPrice = 0.0005*LAMPORTS_PER_SOL;
+  const phaseDelayTime = 3600 * 10;
 
   const tempTokenAccountKeypair = new Keypair();
   const createTempTokenAccountIx = SystemProgram.createAccount({
@@ -89,7 +94,7 @@ const transaction = async () => {
       createAccountInfo(TOKEN_PROGRAM_ID, false, false),
     ],
     data: Buffer.from(
-      Uint8Array.of(instruction, ...new BN(perTokenPrice).toArray("le", 8))
+      Uint8Array.of(instruction, ...new BN([perTokenPrice, maxTokenPrice, increaseTokenPrice, phaseDelayTime]).toArray("le", 32))
     ),
   });
 
@@ -103,14 +108,11 @@ const transaction = async () => {
     initTokenSaleProgramIx
   );
 
-  await connection.sendTransaction(tx, [sellerKeypair, tempTokenAccountKeypair, tokenSaleProgramAccountKeypair], {
-    skipPreflight: false,
-    preflightCommitment: "confirmed",
-  });
+  await sendAndConfirmTransaction(connection, tx, [sellerKeypair, tempTokenAccountKeypair, tokenSaleProgramAccountKeypair]);
   //phase1 end
 
   //wait block update
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  // await new Promise((resolve) => setTimeout(resolve, 2000));
 
   //phase2 (check Transaction result is valid)
   const tokenSaleProgramAccount = await checkAccountInitialized(connection, tokenSaleProgramAccountKeypair.publicKey);

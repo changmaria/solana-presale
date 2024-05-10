@@ -2,10 +2,11 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
-import { Connection, PublicKey, Transaction, TransactionInstruction, Keypair, LAMPORTS_PER_SOL, clusterApiUrl } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, TransactionInstruction, Keypair, LAMPORTS_PER_SOL, clusterApiUrl, sendAndConfirmTransaction } from "@solana/web3.js";
 import { createAccountInfo, checkAccountInitialized } from "./utils";
 import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { TokenSaleAccountLayoutInterface, TokenSaleAccountLayout } from "./account";
+import bs58 = require("bs58");
 
 type InstructionNumber = 0 | 1 | 2;
 
@@ -18,13 +19,13 @@ const transaction = async () => {
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
   const tokenSaleProgramId = new PublicKey(process.env.CUSTOM_PROGRAM_ID!);
   const sellerPubkey = new PublicKey(process.env.SELLER_PUBLIC_KEY!);
-  const sellerPrivateKey = Uint8Array.from(JSON.parse(process.env.SELLER_PRIVATE_KEY!));
+  const sellerPrivateKey = Uint8Array.from(bs58.decode(process.env.SELLER_PRIVATE_KEY!));
   const sellerKeypair = new Keypair({
     publicKey: sellerPubkey.toBytes(),
     secretKey: sellerPrivateKey,
   });
   const buyerPubkey = new PublicKey(process.env.BUYER_PUBLIC_KEY!);
-  const buyerPrivateKey = Uint8Array.from(JSON.parse(process.env.BUYER_PRIVATE_KEY!));
+  const buyerPrivateKey = Uint8Array.from(bs58.decode(process.env.BUYER_PRIVATE_KEY!));
   const buyerKeypair = new Keypair({
     publicKey: buyerPubkey.toBytes(),
     secretKey: buyerPrivateKey,
@@ -66,14 +67,11 @@ const transaction = async () => {
   });
   const tx = new Transaction().add(closeTokenSaleIx);
 
-  await connection.sendTransaction(tx, [sellerKeypair], {
-    skipPreflight: false,
-    preflightCommitment: "confirmed",
-  });
+  await sendAndConfirmTransaction(connection, tx, [sellerKeypair]);
   //phase1 end
 
   //wait block update
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  // await new Promise((resolve) => setTimeout(resolve, 1000));
 
   //phase2 (check token sale)
   const sellerTokenAccountBalance = await connection.getTokenAccountBalance(sellerTokenAccountPubkey);
