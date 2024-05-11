@@ -32,7 +32,7 @@ const transaction = async () => {
 
   //phase1 (setup Transaction & send Transaction)
   console.log("Setup Transaction");
-  const connection = new Connection(clusterApiUrl("devnet"));
+  const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
   const tokenSaleProgramId = new PublicKey(process.env.CUSTOM_PROGRAM_ID!);
   const sellerPubkey = new PublicKey(process.env.SELLER_PUBLIC_KEY!);
   const sellerPrivateKey = Uint8Array.from(bs58.decode(process.env.SELLER_PRIVATE_KEY!));
@@ -48,7 +48,7 @@ const transaction = async () => {
   const perTokenPrice = 0.0075*LAMPORTS_PER_SOL;
   const maxTokenPrice = 0.01*LAMPORTS_PER_SOL;
   const increaseTokenPrice = 0.0005*LAMPORTS_PER_SOL;
-  const phaseDelayTime = 60 * 30;
+  const phaseDelayTime = 60 * 20;
 
   const tempTokenAccountKeypair = new Keypair();
   const createTempTokenAccountIx = SystemProgram.createAccount({
@@ -84,7 +84,7 @@ const transaction = async () => {
     programId: tokenSaleProgramId,
   });
 
-  console.log("tokenSaleProgramId", tokenSaleProgramId);
+  console.log("tokenSaleProgramId", tokenSaleProgramId.toBase58());
 
   const initTokenSaleProgramIx = new TransactionInstruction({
     programId: tokenSaleProgramId,
@@ -96,11 +96,15 @@ const transaction = async () => {
       createAccountInfo(TOKEN_PROGRAM_ID, false, false),
     ],
     data: Buffer.from(
-      Uint8Array.of(instruction, ...new BN([perTokenPrice, maxTokenPrice, increaseTokenPrice, phaseDelayTime]).toArray("le", 32))
+      Uint8Array.of(instruction, 
+        ...new BN(perTokenPrice).toArray("le", 8),
+        ...new BN(maxTokenPrice).toArray("le", 8),
+        ...new BN(increaseTokenPrice).toArray("le", 8),
+        ...new BN(phaseDelayTime).toArray("le", 8),
+      )
     ),
   });
-
-  //make transaction with several instructions(ix)
+  
   console.log("Send transaction...\n");
   const tx = new Transaction().add(
     createTempTokenAccountIx,
@@ -109,10 +113,9 @@ const transaction = async () => {
     createTokenSaleProgramAccountIx,
     initTokenSaleProgramIx
   );
-  tx.feePayer = sellerKeypair.publicKey;
-  tx.partialSign(sellerKeypair);
 
-  await sendAndConfirmTransaction(connection, tx, [sellerKeypair, tempTokenAccountKeypair, tokenSaleProgramAccountKeypair]);
+  const signature = await sendAndConfirmTransaction(connection, tx, [sellerKeypair, tempTokenAccountKeypair, tokenSaleProgramAccountKeypair]);
+  console.log("signature: ", signature);
   //phase1 end
 
   //phase2 (check Transaction result is valid)
@@ -128,6 +131,11 @@ const transaction = async () => {
     sellerPubkey: sellerKeypair.publicKey,
     tempTokenAccountPubkey: tempTokenAccountKeypair.publicKey,
     pricePerToken: perTokenPrice,
+    maxTokenPrice: maxTokenPrice,
+    increaseTokenPrice: increaseTokenPrice,
+    pucharsedTokenAmount: 0,
+    phaseStartTime: 0,
+    phaseDelayTime: phaseDelayTime
   };
 
   console.log("Current TokenSaleProgramAccountData");
@@ -140,7 +148,7 @@ const transaction = async () => {
   ]);
   console.log(`✨TX successfully finished✨\n`);
   //#phase2 end
-
+  
   process.env.TOKEN_SALE_PROGRAM_ACCOUNT_PUBKEY = tokenSaleProgramAccountKeypair.publicKey.toString();
   process.env.TEMP_TOKEN_ACCOUNT_PUBKEY = tempTokenAccountKeypair.publicKey.toString();
   updateEnv();

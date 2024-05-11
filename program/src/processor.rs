@@ -45,9 +45,9 @@ impl Processor {
                 Self::buy_token(accounts, token_program_id, number_of_tokens)
             }
 
-            TokenSaleInstruction::Airdrop { number_of_tokens } => {
-                msg!("Instruction: buy token");
-                Self::airdrop(accounts, token_program_id, number_of_tokens)
+            TokenSaleInstruction::AirdropToken { number_of_tokens } => {
+                msg!("Instruction: airdrop token");
+                Self::airdrop_token(accounts, token_program_id, number_of_tokens)
             }
 
             TokenSaleInstruction::EndTokenSale {} => {
@@ -71,31 +71,32 @@ impl Processor {
         if !seller_account_info.is_signer {
             return Err(ProgramError::MissingRequiredSignature);
         }
-
+        
         let temp_token_account_info = next_account_info(account_info_iter)?;
         if *temp_token_account_info.owner != spl_token::id() {
             return Err(ProgramError::IncorrectProgramId);
         }
-
+        
         let token_sale_program_account_info = next_account_info(account_info_iter)?;
 
         let rent_account_info = next_account_info(account_info_iter)?;
         let rent = &Rent::from_account_info(rent_account_info)?;
-
+        
         if !rent.is_exempt(
             token_sale_program_account_info.lamports(),
             token_sale_program_account_info.data_len(),
         ) {
             return Err(ProgramError::AccountNotRentExempt);
         }
-
+        
         let mut token_sale_program_account_data = TokenSaleProgramData::unpack_unchecked(
             &token_sale_program_account_info.try_borrow_data()?,
         )?;
+        
         if token_sale_program_account_data.is_initialized {
             return Err(ProgramError::AccountAlreadyInitialized);
         }
-
+        
         token_sale_program_account_data.init(
             true,
             *seller_account_info.key,
@@ -107,7 +108,7 @@ impl Processor {
             solana_program::sysvar::clock::Clock::get()?.unix_timestamp,
             phase_delay_time
         );
-
+        
         TokenSaleProgramData::pack(
             token_sale_program_account_data,
             &mut token_sale_program_account_info.try_borrow_mut_data()?,
@@ -115,7 +116,7 @@ impl Processor {
 
         let (pda, _bump_seed) =
             Pubkey::find_program_address(&[b"token_sale"], token_sale_program_id);
-
+        
         let token_program = next_account_info(account_info_iter)?;
         let set_authority_ix = spl_token::instruction::set_authority(
             token_program.key,
@@ -126,7 +127,7 @@ impl Processor {
             &[&seller_account_info.key],
         )?;
 
-        msg!("chage tempToken's Authroity : seller -> token_program");
+        msg!("Change tempToken's Authroity : seller -> token_program");
         invoke(
             &set_authority_ix,
             &[
@@ -173,8 +174,8 @@ impl Processor {
                 )
             }
         }
-
-        msg!("Transfer {} SOL : buy account -> seller account",current_token_price * number_of_tokens);
+        
+        msg!("Transfer {} SOL : buy account -> seller account", current_token_price * number_of_tokens);
         let transfer_sol_to_seller = system_instruction::transfer(
             buyer_account_info.key,
             seller_account_info.key,
@@ -191,7 +192,7 @@ impl Processor {
             ],
         )?;
 
-        msg!("transfer Token : temp token account -> buyer token account");
+        msg!("Transfer Token : temp token account -> buyer token account");
         let buyer_token_account_info = next_account_info(account_info_iter)?;
         let token_program = next_account_info(account_info_iter)?;
         let (pda, bump_seed) =
@@ -228,11 +229,11 @@ impl Processor {
         return Ok(());
     }
 
-    fn airdrop(accounts: &[AccountInfo], token_sale_program_id: &Pubkey, number_of_tokens:u64) -> ProgramResult {
+    fn airdrop_token(accounts: &[AccountInfo], token_sale_program_id: &Pubkey, number_of_tokens:u64) -> ProgramResult {
         let account_info_iter = &mut accounts.iter();
         let airdrop_account_info = next_account_info(account_info_iter)?;
         if !airdrop_account_info.is_signer {
-            return Err(ProgramError::MissingRequiredSignature); 
+            return Err(ProgramError::MissingRequiredSignature);
         }
 
         let seller_account_info = next_account_info(account_info_iter)?;
@@ -250,7 +251,7 @@ impl Processor {
             return Err(ProgramError::InvalidAccountData);
         }
 
-        msg!("transfer Token : temp token account -> airdrop token account");
+        msg!("Airdrop Token : temp token account -> airdrop token account");
         let airdrop_token_account_info = next_account_info(account_info_iter)?;
         let token_program = next_account_info(account_info_iter)?;
         let (pda, bump_seed) =
@@ -299,7 +300,7 @@ impl Processor {
             Pubkey::find_program_address(&[b"token_sale"], token_sale_program_id);
         let pda_account_info = next_account_info(account_info_iter)?;
 
-        msg!("transfer Token : temp token account -> seller token account");
+        msg!("Transfer Token : temp token account -> seller token account");
         let temp_token_account_info_data = Account::unpack(&temp_token_account_info.data.borrow())?;
 
         let transfer_token_to_seller_ix = spl_token::instruction::transfer(
@@ -322,7 +323,7 @@ impl Processor {
             &[&[&b"token_sale"[..], &[_bump_seed]]],
         )?;
 
-        msg!("close account : temp token account -> seller account");
+        msg!("Close account : temp token account -> seller account");
         let close_temp_token_account_ix = spl_token::instruction::close_account(
             token_program.key,
             temp_token_account_info.key,
@@ -342,7 +343,7 @@ impl Processor {
             &[&[&b"token_sale"[..], &[_bump_seed]]],
         )?;
 
-        msg!("close token sale program");
+        msg!("Close token sale program");
         let token_sale_program_account_info = next_account_info(account_info_iter)?;
         **seller_account_info.try_borrow_mut_lamports()? = seller_account_info
             .lamports()

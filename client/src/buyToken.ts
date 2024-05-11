@@ -35,7 +35,7 @@ const transaction = async () => {
     secretKey: buyerPrivateKey,
   });
 
-  const number_of_tokens = 100;
+  const number_of_tokens = 10;
 
   const tokenPubkey = new PublicKey(process.env.TOKEN_PUBKEY!);
   const tokenSaleProgramAccountPubkey = new PublicKey(process.env.TOKEN_SALE_PROGRAM_ACCOUNT_PUBKEY!);
@@ -67,7 +67,7 @@ const transaction = async () => {
       createAccountInfo(buyerKeypair.publicKey, true, true),
       createAccountInfo(tokenSaleProgramAccountData.sellerPubkey, false, true),
       createAccountInfo(tokenSaleProgramAccountData.tempTokenAccountPubkey, false, true),
-      createAccountInfo(tokenSaleProgramAccountPubkey, false, false),
+      createAccountInfo(tokenSaleProgramAccountPubkey, false, true),
       createAccountInfo(SystemProgram.programId, false, false),
       createAccountInfo(buyerTokenAccount.address, false, true),
       createAccountInfo(TOKEN_PROGRAM_ID, false, false),

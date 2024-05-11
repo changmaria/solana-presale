@@ -70,9 +70,6 @@ const transaction = async () => {
   await sendAndConfirmTransaction(connection, tx, [sellerKeypair]);
   //phase1 end
 
-  //wait block update
-  // await new Promise((resolve) => setTimeout(resolve, 1000));
-
   //phase2 (check token sale)
   const sellerTokenAccountBalance = await connection.getTokenAccountBalance(sellerTokenAccountPubkey);
   const buyerTokenAccountBalance = await connection.getTokenAccountBalance(buyerTokenAccount.address);

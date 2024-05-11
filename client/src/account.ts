@@ -4,10 +4,15 @@ import { PublicKey } from "@solana/web3.js";
 import * as BufferLayout from "buffer-layout";
 
 export const TokenSaleAccountLayout = BufferLayout.struct([
-  BufferLayout.u8("isInitialized"), //1byte
-  BufferLayout.blob(32, "sellerPubkey"), //pubkey(32byte)
-  BufferLayout.blob(32, "tempTokenAccountPubkey"), //pubkey(32byte)
-  BufferLayout.blob(8, "pricePerToken"), //8byte
+  BufferLayout.u8("isInitialized"),
+  BufferLayout.blob(32, "sellerPubkey"),
+  BufferLayout.blob(32, "tempTokenAccountPubkey"),
+  BufferLayout.blob(8, "pricePerToken"),
+  BufferLayout.blob(8, "maxTokenPrice"),
+  BufferLayout.blob(8, "increaseTokenPrice"),
+  BufferLayout.blob(8, "pucharsedTokenAmount"),
+  BufferLayout.blob(8, "phaseStartTime"),
+  BufferLayout.blob(8, "phaseDelayTime"),
 ]);
 
 export interface TokenSaleAccountLayoutInterface {
@@ -16,6 +21,11 @@ export interface TokenSaleAccountLayoutInterface {
   sellerPubkey: Uint8Array;
   tempTokenAccountPubkey: Uint8Array;
   pricePerToken: Uint8Array;
+  maxTokenPrice: Uint8Array;
+  increaseTokenPrice: Uint8Array;
+  pucharsedTokenAmount: Uint8Array;
+  phaseStartTime: Uint8Array;
+  phaseDelayTime: Uint8Array;
 }
 
 export interface ExpectedTokenSaleAccountLayoutInterface {
@@ -24,4 +34,9 @@ export interface ExpectedTokenSaleAccountLayoutInterface {
   sellerPubkey: PublicKey;
   tempTokenAccountPubkey: PublicKey;
   pricePerToken: number;
+  maxTokenPrice: number;
+  increaseTokenPrice: number;
+  pucharsedTokenAmount: number;
+  phaseStartTime: number;
+  phaseDelayTime: number;
 }

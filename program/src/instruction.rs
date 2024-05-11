@@ -13,7 +13,7 @@ pub enum TokenSaleInstruction {
     BuyToken {
         number_of_tokens: u64,
     },
-    Airdrop {
+    AirdropToken {
         number_of_tokens: u64,
     },
     EndTokenSale {}
@@ -29,14 +29,14 @@ impl TokenSaleInstruction {
         return match tag {
             0 => Ok(Self::InitTokenSale {
                 per_token_price: Self::unpack_byte(rest, 0)?,
-                max_token_price: Self::unpack_byte(rest, 8)?,
-                increase_token_price: Self::unpack_byte(rest, 16)?,
-                phase_delay_time: Self::unpack_byte(rest, 24)?,
+                max_token_price: Self::unpack_byte(rest, 1)?,
+                increase_token_price: Self::unpack_byte(rest, 2)?,
+                phase_delay_time: Self::unpack_byte(rest, 3)?,
             }),
             1 => Ok(Self::BuyToken {
                 number_of_tokens: Self::unpack_byte(rest, 0)?,
             }),
-            2 => Ok(Self::Airdrop {
+            2 => Ok(Self::AirdropToken {
                 number_of_tokens: Self::unpack_byte(rest, 0)?,
             }),
             3 => Ok(Self::EndTokenSale {}),

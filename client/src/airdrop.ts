@@ -23,18 +23,18 @@ type InstructionNumber = 0 | 1 | 2 | 3;
 const transaction = async () => {
   console.log("4. Airdrop Tokens");
   //phase1 (setup Transaction & send Transaction)
-  console.log("Setup Buy Transaction");
+  console.log("Setup Airdrop Transaction");
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
   const tokenSaleProgramId = new PublicKey(process.env.CUSTOM_PROGRAM_ID!);
   const sellerPubkey = new PublicKey(process.env.SELLER_PUBLIC_KEY!);
-  const buyerPubkey = new PublicKey(process.env.BUYER_PUBLIC_KEY!);
-  const buyerPrivateKey = Uint8Array.from(bs58.decode(process.env.BUYER_PRIVATE_KEY!));
-  const buyerKeypair = new Keypair({
-    publicKey: buyerPubkey.toBytes(),
-    secretKey: buyerPrivateKey,
+  const airdropPubkey = new PublicKey(process.env.BUYER_PUBLIC_KEY!);
+  const airdropPrivateKey = Uint8Array.from(bs58.decode(process.env.BUYER_PRIVATE_KEY!));
+  const airdropKeypair = new Keypair({
+    publicKey: airdropPubkey.toBytes(),
+    secretKey: airdropPrivateKey,
   });
 
-  const number_of_tokens = 100;
+  const number_of_tokens = 10;
 
   const tokenPubkey = new PublicKey(process.env.TOKEN_PUBKEY!);
   const tokenSaleProgramAccountPubkey = new PublicKey(process.env.TOKEN_SALE_PROGRAM_ACCOUNT_PUBKEY!);
@@ -55,19 +55,19 @@ const transaction = async () => {
     swapTokenAmount: decodedTokenSaleProgramAccountData.swapTokenAmount,
   };
 
-  const token = new Token(connection, tokenPubkey, TOKEN_PROGRAM_ID, buyerKeypair);
-  const buyerTokenAccount = await token.getOrCreateAssociatedAccountInfo(buyerKeypair.publicKey);
+  const token = new Token(connection, tokenPubkey, TOKEN_PROGRAM_ID, airdropKeypair);
+  const airdropTokenAccount = await token.getOrCreateAssociatedAccountInfo(airdropKeypair.publicKey);
 
   const PDA = await PublicKey.findProgramAddress([Buffer.from("token_sale")], tokenSaleProgramId);
 
   const buyTokenIx = new TransactionInstruction({
     programId: tokenSaleProgramId,
     keys: [
-      createAccountInfo(buyerKeypair.publicKey, true, true),
+      createAccountInfo(airdropKeypair.publicKey, true, true),
       createAccountInfo(tokenSaleProgramAccountData.sellerPubkey, false, true),
       createAccountInfo(tokenSaleProgramAccountData.tempTokenAccountPubkey, false, true),
-      createAccountInfo(tokenSaleProgramAccountPubkey, false, false),
-      createAccountInfo(buyerTokenAccount.address, false, true),
+      createAccountInfo(tokenSaleProgramAccountPubkey, false, true),
+      createAccountInfo(airdropTokenAccount.address, false, true),
       createAccountInfo(TOKEN_PROGRAM_ID, false, false),
       createAccountInfo(PDA[0], false, false),
     ],
@@ -77,29 +77,29 @@ const transaction = async () => {
     
   const tx = new Transaction().add(buyTokenIx);
 
-  await sendAndConfirmTransaction(connection, tx, [buyerKeypair]);
+  await sendAndConfirmTransaction(connection, tx, [airdropKeypair]);
   //phase1 end
 
   //phase2 (check token sale)
   const sellerTokenAccountBalance = await connection.getTokenAccountBalance(sellerTokenAccountPubkey);
   const tempTokenAccountBalance = await connection.getTokenAccountBalance(tempTokenAccountPubkey);
-  const buyerTokenAccountBalance = await connection.getTokenAccountBalance(buyerTokenAccount.address);
+  const airdropTokenAccountBalance = await connection.getTokenAccountBalance(airdropTokenAccount.address);
 
   console.table([
     {
       sellerTokenAccountBalance: sellerTokenAccountBalance.value.amount.toString(),
       tempTokenAccountBalance: tempTokenAccountBalance.value.amount.toString(),
-      buyerTokenAccountBalance: buyerTokenAccountBalance.value.amount.toString(),
+      airdropTokenAccountBalance: airdropTokenAccountBalance.value.amount.toString(),
     },
   ]);
 
   const sellerSOLBalance = await connection.getBalance(sellerPubkey, "confirmed");
-  const buyerSOLBalance = await connection.getBalance(buyerKeypair.publicKey, "confirmed");
+  const airdropSOLBalance = await connection.getBalance(airdropKeypair.publicKey, "confirmed");
 
   console.table([
     {
       sellerSOLBalance: sellerSOLBalance / LAMPORTS_PER_SOL,
-      buyerSOLBalance: buyerSOLBalance / LAMPORTS_PER_SOL,
+      airdropSOLBalance: airdropSOLBalance / LAMPORTS_PER_SOL,
     },
   ]);
 

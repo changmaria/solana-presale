@@ -58,32 +58,32 @@ export const checkAccountDataIsValid = (
   const data: { [char: string]: string } = {};
 
   keysOfAccountData.forEach((key) => {
-    const value = customAccountData[key];
-    const expectedValue = expectedCustomAccountState[key];
-
-    //PublicKey
-    if (value instanceof Uint8Array && expectedValue instanceof PublicKey) {
-      if (!new PublicKey(value).equals(expectedValue)) {
-        console.log(`${key} is not matched expected one`);
-        process.exit(1);
+    if (key !== "phaseStartTime") {
+      const value = customAccountData[key];
+      const expectedValue = expectedCustomAccountState[key];
+  
+      if (value instanceof Uint8Array && expectedValue instanceof PublicKey) {
+        if (!new PublicKey(value).equals(expectedValue)) {
+          console.log(`${key} is not matched expected one`);
+          process.exit(1);
+        }
+      } else if (value instanceof Uint8Array && typeof expectedValue === "number") {
+        
+        if (!value) {
+          console.log(`${key} flag has not been set`);
+          process.exit(1);
+        }
+  
+        const isBufferSame = Buffer.compare(value, Buffer.from(new BN(expectedValue).toArray("le", value.length)));
+  
+        if (isBufferSame !== 0) {
+          console.log(`[${key}] : expected value is ${expectedValue}, but current value is ${value}`);
+          process.exit(1);
+        }
       }
-    } else if (value instanceof Uint8Array && typeof expectedValue === "number") {
-      //value is undefined
-      if (!value) {
-        console.log(`${key} flag has not been set`);
-        process.exit(1);
-      }
-
-      //value is not matched expected one.
-      const isBufferSame = Buffer.compare(value, Buffer.from(new BN(expectedValue).toArray("le", value.length)));
-
-      if (isBufferSame !== 0) {
-        console.log(`[${key}] : expected value is ${expectedValue}, but current value is ${value}`);
-        process.exit(1);
-      }
+  
+      data[key] = expectedValue.toString();
     }
-
-    data[key] = expectedValue.toString();
   });
   console.table([data]);
 };

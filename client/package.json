@@ -5,13 +5,11 @@
   "main": "index.js",
   "scripts": {
     "compile": "tsc -p ./tsconfig.json",
-    "setup-validator": "solana-test-validator -r --bpf-program 79qNzt6mJ9iifKBB4WK5MaCJDJwnU6DWCvX7E8ScD6M9",
     "setup": "npm run compile && node build/setup.js",
-    "start": "node build/startTokenSale.js",
+    "start": "npm run compile && node build/startTokenSale.js",
     "buy": "npm run compile && node build/buyToken.js",
     "airdrop": "npm run compile && node build/airdrop.js",
-    "close": "npm run compile && node build/closeTokenSale.js",
-    "all": "npm run compile && node build/setup.js && node build/startTokenSale.js && node build/buyToken.js && node build/closeTokenSale.js"
+    "close": "npm run compile && node build/closeTokenSale.js"
   },
   "author": "",
   "devDependencies": {
