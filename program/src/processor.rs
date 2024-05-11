@@ -106,7 +106,7 @@ impl Processor {
             increase_token_price,
             0,
             solana_program::sysvar::clock::Clock::get()?.unix_timestamp,
-            phase_delay_time
+            phase_delay_time as i64
         );
         
         TokenSaleProgramData::pack(
@@ -164,14 +164,19 @@ impl Processor {
 
         let mut current_token_price = token_sale_program_account_data.per_token_price;
         let current_time = solana_program::sysvar::clock::Clock::get()?.unix_timestamp;
-        let next_phase_time = token_sale_program_account_data.phase_start_time + token_sale_program_account_data.phase_delay_time as i64;
-        if current_time >= next_phase_time {
+        if current_time >= token_sale_program_account_data.phase_start_time + token_sale_program_account_data.phase_delay_time {
             if token_sale_program_account_data.max_token_price > current_token_price {
-                current_token_price = current_token_price + token_sale_program_account_data.increase_token_price;
+                let float_times = ((current_time - token_sale_program_account_data.phase_start_time) / token_sale_program_account_data.phase_delay_time) as f64;
+                let mut times = (float_times.floor()) as i64;
+                if current_token_price + (times as u64 * token_sale_program_account_data.increase_token_price) > token_sale_program_account_data.max_token_price {
+                    times = ((token_sale_program_account_data.max_token_price - current_token_price) / token_sale_program_account_data.increase_token_price) as i64;
+                }
+                let start_time = token_sale_program_account_data.phase_start_time + (times as i64 * token_sale_program_account_data.phase_delay_time);
+                current_token_price = current_token_price + (times as u64 * token_sale_program_account_data.increase_token_price);
                 token_sale_program_account_data.update_sale_phase(
                     current_token_price,
-                    next_phase_time
-                )
+                    start_time
+                );
             }
         }
         

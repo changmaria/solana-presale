@@ -15,7 +15,7 @@ pub struct TokenSaleProgramData {
     pub increase_token_price: u64,
     pub purchased_token_amount: u64,
     pub phase_start_time: i64,
-    pub phase_delay_time: u64
+    pub phase_delay_time: i64
 }
 
 impl TokenSaleProgramData {
@@ -29,7 +29,7 @@ impl TokenSaleProgramData {
         increase_token_price: u64,
         purchased_token_amount: u64,
         phase_start_time: i64,
-        phase_delay_time: u64
+        phase_delay_time: i64
     ) {
         self.is_initialized = is_initialized;
         self.seller_pubkey = seller_pubkey;
@@ -98,7 +98,7 @@ impl Pack for TokenSaleProgramData {
             increase_token_price: u64::from_le_bytes(*increase_token_price),
             purchased_token_amount: u64::from_le_bytes(*purchased_token_amount),
             phase_start_time: i64::from_le_bytes(*phase_start_time),
-            phase_delay_time: u64::from_le_bytes(*phase_delay_time),
+            phase_delay_time: i64::from_le_bytes(*phase_delay_time),
         });
     }
 
