@@ -46,7 +46,7 @@ impl TokenSaleProgramData {
         &mut self,
         purchased_token_amount: u64,
     ) {
-        self.purchased_token_amount += purchased_token_amount;
+        self.purchased_token_amount = self.purchased_token_amount + purchased_token_amount;
     }
 
     pub fn update_sale_phase (

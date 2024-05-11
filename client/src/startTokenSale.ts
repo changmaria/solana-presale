@@ -45,10 +45,10 @@ const transaction = async () => {
   console.log("sellerTokenAccountPubkey: ", sellerTokenAccountPubkey.toBase58());
   const instruction: InstructionNumber = 0;
   const amountOfTokenWantToSale = 1000;
-  const perTokenPrice = 0.0075*LAMPORTS_PER_SOL;
-  const maxTokenPrice = 0.01*LAMPORTS_PER_SOL;
-  const increaseTokenPrice = 0.0005*LAMPORTS_PER_SOL;
-  const phaseDelayTime = 60 * 20;
+  const perTokenPrice = 0.0075 * LAMPORTS_PER_SOL;
+  const maxTokenPrice = 0.01 * LAMPORTS_PER_SOL;
+  const increaseTokenPrice = 0.0005 * LAMPORTS_PER_SOL;
+  const phaseDelayTime = 3600 * 24 * 21;
 
   const tempTokenAccountKeypair = new Keypair();
   const createTempTokenAccountIx = SystemProgram.createAccount({
@@ -148,7 +148,7 @@ const transaction = async () => {
   ]);
   console.log(`✨TX successfully finished✨\n`);
   //#phase2 end
-  
+
   process.env.TOKEN_SALE_PROGRAM_ACCOUNT_PUBKEY = tokenSaleProgramAccountKeypair.publicKey.toString();
   process.env.TEMP_TOKEN_ACCOUNT_PUBKEY = tempTokenAccountKeypair.publicKey.toString();
   updateEnv();
